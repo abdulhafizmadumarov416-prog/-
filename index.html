@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="tg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Фарида — Барномаи тиббии шахсӣ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="phone">
+  <div class="notch-bar"><span></span></div>
+
+  <div class="app-header">
+    <div class="session-pill" id="session-pill" onclick="logout()">👤 <span id="session-name"></span> · Баромадан</div>
+    <svg class="cross" viewBox="0 0 100 100">
+      <defs>
+        <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#FFFFFF"/>
+          <stop offset="100%" stop-color="#ECEAE0"/>
+        </linearGradient>
+        <linearGradient id="crossGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#FF6B78"/>
+          <stop offset="100%" stop-color="#D42E42"/>
+        </linearGradient>
+        <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="2.5" stdDeviation="2.5" flood-color="#111315" flood-opacity="0.22"/>
+        </filter>
+      </defs>
+      <rect x="7" y="7" width="86" height="86" rx="24" fill="url(#bgGrad)" stroke="#E1EBE7" stroke-width="1"/>
+      <g filter="url(#softShadow)">
+        <path d="M42 25h16v17h17v16H58v17H42V58H25V42h17Z" fill="url(#crossGrad)" stroke="#B8283A" stroke-width="1" stroke-linejoin="round"/>
+      </g>
+      <path d="M42 25h16v9H42Z" fill="#ffffff" opacity=".28"/>
+    </svg>
+    <div class="brand-text"><h1>Мадади Сино</h1><span class="brand-sub">Барномаи тиббии шахсӣ</span></div>
+  </div>
+
+  <div class="app-body">
+
+    <!-- ============ SCREEN: CHAT ============ -->
+    <div class="screen active" id="screen-chat">
+
+      <!-- Login/Register view -->
+      <div id="auth-view">
+        <div class="auth-layout">
+          <div class="auth-hero">
+            <div class="hero-badge">Барномаи тиббии шахсӣ</div>
+            <h2>Саломатии шумо — ҳамеша дар назди шумо</h2>
+            <p>Бо дигар корбарон муошират кунед, гурӯҳ созед, дору ёбед ва ба саволҳои тиббӣ ҷавоб гиред.</p>
+            <ul class="hero-list">
+              <li><span class="ck">✓</span><div><b>Чат ва гурӯҳҳо</b><small>Саҳифаи шахсии худро созед ва бо ҳар касе, ки хоҳед, сӯҳбат кунед</small></div></li>
+              <li><span class="ck">✓</span><div><b>Китобхонаи тиббӣ</b><small>Ихтисосҳо ва зерихтисосҳои тиб дар як ҷо</small></div></li>
+              <li><span class="ck">✓</span><div><b>Дорухона</b><small>Маълумоти доруҳо: кай истифода баред ва кай не</small></div></li>
+              <li><span class="ck">✓</span><div><b>AI Духтур</b><small>Савол диҳед бо матн ё овоз</small></div></li>
+            </ul>
+          </div>
+          <div class="auth-card">
+        <div class="section-title">
+          <div class="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9c0-3.9 3.1-7 7-7s7 3.1 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+          <div><h2 id="auth-title">Вуруд ба ҳисоб</h2><span id="auth-sub">Барои истифодаи чат ворид шавед</span></div>
+        </div>
+        <div class="auth-box">
+
+          <!-- Вуруд -->
+          <div class="auth-panel active" id="panel-login">
+            <div class="field"><label>Акаунт (почтаи электронӣ)</label><input type="email" id="login-email" placeholder="name@gmail.com" autocomplete="username"></div>
+            <div class="field"><label>Код (парол)</label><input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter') handleLogin();"></div>
+            <div class="auth-actions"><button class="btn btn-green" onclick="handleLogin()">Ворид шудан</button></div>
+            <div class="auth-switch"><a onclick="showAuthMode('forgot')">Код фаромӯш шуд?</a></div>
+            <div class="auth-switch">Ҳисоб надоред? <a onclick="showAuthMode('reg1')">Сабти ном кунед</a></div>
+          </div>
+
+          <!-- Сабти ном: қадами 1 -->
+          <div class="auth-panel" id="panel-reg1">
+            <div class="field"><label>Акаунт (почтаи электронӣ)</label><input type="email" id="reg-email" placeholder="name@gmail.com" autocomplete="username"></div>
+            <div class="field"><label>Код (парол)</label><input type="password" id="reg-password" placeholder="камаш 4 аломат" autocomplete="new-password" onkeydown="if(event.key==='Enter') regNext();"></div>
+            <div class="auth-actions"><button class="btn btn-green" onclick="regNext()">Давом додан</button></div>
+            <div class="auth-switch">Ҳисоб доред? <a onclick="showAuthMode('login')">Ворид шавед</a></div>
+          </div>
+
+          <!-- Сабти ном: қадами 2 -->
+          <div class="auth-panel" id="panel-reg2">
+            <div class="field"><label>Номи шумо</label><input type="text" id="reg-name" placeholder="масалан: Ахмад" autocomplete="name" onkeydown="if(event.key==='Enter') handleRegister();"></div>
+            <div class="auth-actions">
+              <button class="btn btn-outline" onclick="showAuthMode('reg1')">Бозгашт</button>
+              <button class="btn btn-green" onclick="handleRegister()">Сабти ном</button>
+            </div>
+          </div>
+
+          <!-- Барқарорсозии код -->
+          <div class="auth-panel" id="panel-forgot">
+            <div class="field"><label>Акаунти худро нависед (почта)</label><input type="email" id="forgot-email" placeholder="name@gmail.com" onkeydown="if(event.key==='Enter') handleForgot();"></div>
+            <div class="auth-actions"><button class="btn btn-green" onclick="handleForgot()">Фиристодани код</button></div>
+            <div class="auth-switch"><a onclick="showAuthMode('login')">← Бозгашт ба вуруд</a></div>
+          </div>
+
+          <div class="error-msg" id="auth-error"></div>
+          <div class="info-msg" id="auth-info"></div>
+          <p class="auth-note">⚠️ Ин прототип аст. Барои маълумоти хеле ҳассос истифода набаред.</p>
+        </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat view (after login): мессенҷер -->
+      <div id="chat-view" style="display:none;">
+        <div class="messenger" id="messenger">
+          <aside class="m-side">
+            <div class="m-me">
+              <div id="m-me-avatar"></div>
+              <div class="m-me-text"><b id="m-me-name"></b><small id="m-me-email"></small></div>
+            </div>
+            <div class="m-actions">
+              <button class="btn btn-outline" onclick="showMyProfile()">👤 Саҳифаи ман</button>
+              <button class="btn btn-green" onclick="showNewGroup()">＋ Гурӯҳ</button>
+            </div>
+            <div class="m-search"><input type="text" id="m-search" placeholder="🔎 Ҷустуҷӯи корбар (ном ё почта)..." oninput="onUserSearch()"></div>
+            <div class="m-list" id="m-list"></div>
+          </aside>
+          <section class="m-main" id="m-main"></section>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SCREEN: ADMIN (танҳо назорат) ============ -->
+    <div class="screen" id="screen-admin">
+      <div class="back-link" onclick="switchScreen('chat')">← Бозгашт</div>
+      <div class="section-title">
+        <div class="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2 3 6v6c0 5 4 8 9 10 5-2 9-5 9-10V6l-9-4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div><h2>Панели маъмур</h2><span>Назорат: ҳамаи сӯҳбатҳо ва корбарон (танҳо хондан)</span></div>
+      </div>
+
+      <div class="box" id="admin-settings">
+        <h3>🔐 Коди маъмур</h3>
+        <p style="font-size:.85rem;color:var(--gray);">Бо ин код ба панел тавассути чати «AI Духтур» ворид мешавед. Коди нав бояд аз 6 то 64 аломат бошад, бе фосила.</p>
+        <div class="field"><label>Коди нав</label><input type="password" id="admin-new-code" placeholder="••••••••" autocomplete="new-password"></div>
+        <div class="field"><label>Такрори коди нав</label><input type="password" id="admin-new-code2" placeholder="••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter') changeAdminCode();"></div>
+        <div class="error-msg" id="admin-code-error"></div>
+        <div class="info-msg" id="admin-code-info"></div>
+        <div class="auth-actions"><button class="btn btn-green" onclick="changeAdminCode()">Захира кардани коди нав</button></div>
+      </div>
+
+      <div id="admin-main">
+        <div class="tabs">
+          <button class="tab active" id="tab-convs" onclick="adminTab('convs')">Сӯҳбатҳо</button>
+          <button class="tab" id="tab-users" onclick="adminTab('users')">Корбарон</button>
+        </div>
+        <div id="admin-user-list"></div>
+      </div>
+
+      <div id="admin-chat-view" style="display:none;">
+        <div class="back-link" onclick="renderAdminList()">← Ба рӯйхат</div>
+        <button class="back-link" style="border:none;" onclick="refreshAdminConv()">🔄 Навсозӣ</button>
+        <div class="box" id="admin-conv-head"></div>
+        <div class="chat-window" style="height:auto;max-height:calc(100vh - 360px);min-height:300px;">
+          <div class="chat-messages" id="admin-messages"></div>
+        </div>
+        <p style="font-size:.8rem;color:var(--gray);margin-top:10px;">Ҳолати назорат: маъмур танҳо мехонад ва паём фиристода наметавонад. Паёмҳои нестшуда бе матн нишон дода мешаванд.</p>
+      </div>
+    </div>
+
+    <!-- ============ SCREEN: LIBRARY ============ -->
+    <div class="screen" id="screen-library">
+      <div class="section-title">
+        <div class="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M4 19V5a2 2 0 0 1 2-2h12a1 1 0 0 1 1 1v14M6 21h13M6 21a2 2 0 1 1 0-4h13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div><h2>Китобхонаи тиббӣ</h2><span>Ихтисосҳо ва зерихтисосҳо</span></div>
+      </div>
+      <div id="library-list"></div>
+    </div>
+
+    <!-- ============ SCREEN: PHARMACY ============ -->
+    <div class="screen" id="screen-pharmacy">
+      <div class="section-title">
+        <div class="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8.5 8.5l7 7" stroke="currentColor" stroke-width="2"/></svg></div>
+        <div><h2>Дорухона</h2><span>Ҷустуҷӯ бо номи дору ё бемори</span></div>
+      </div>
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="m21 21-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input type="text" id="pharmacy-search" placeholder="масалан: дарди сар, таб, Парацетамол..." oninput="renderPharmacy()">
+        <button onclick="renderPharmacy()">Ёфтан</button>
+      </div>
+      <div id="pharmacy-list"></div>
+    </div>
+
+    <!-- ============ SCREEN: AI DOCTOR ============ -->
+    <div class="screen" id="screen-ai" style="height:100%;">
+      <div class="section-title">
+        <div class="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2a4 4 0 0 0-4 4v6a4 4 0 0 0 8 0V6a4 4 0 0 0-4-4Z" stroke="currentColor" stroke-width="2"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div><h2>AI Духтур</h2><span>Бо матн ё овоз савол диҳед</span></div>
+      </div>
+      <div class="ai-disclaimer">Ман ёрдамчии AI ҳастам, на духтури воқеӣ. Дар ҳолати ҷиддӣ фавран ба ёрии таъҷилӣ занг занед.</div>
+      <button class="btn btn-outline" style="flex:none;width:auto;margin-bottom:14px;font-size:.82rem;padding:9px 16px;" onclick="testVoice()">🔊 Санҷиши садо (TTS)</button>
+      <div class="chat-window">
+        <div class="chat-messages" id="ai-messages"></div>
+        <div class="chat-input-row">
+          <button class="mic-fab" id="ai-mic-btn" onclick="toggleAiMic()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2a4 4 0 0 0-4 4v6a4 4 0 0 0 8 0V6a4 4 0 0 0-4-4Z" stroke="currentColor" stroke-width="2"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+          <input type="text" id="ai-input" placeholder="Саволи тиббӣ нависед..." onkeydown="if(event.key==='Enter') sendAiMessage();">
+          <button class="icon-send" onclick="sendAiMessage()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="app-nav">
+    <button class="nav-btn active" data-screen="chat" onclick="switchScreen('chat')">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M21 12a8.5 8.5 0 0 1-12.2 7.6L4 21l1.4-4.8A8.5 8.5 0 1 1 21 12Z" stroke="currentColor" stroke-width="2"/></svg>
+      Чат
+    </button>
+    <button class="nav-btn" data-screen="library" onclick="switchScreen('library')">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M4 19V5a2 2 0 0 1 2-2h12a1 1 0 0 1 1 1v14M6 21h13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Китобхона
+    </button>
+    <button class="nav-btn" data-screen="pharmacy" onclick="switchScreen('pharmacy')">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z" stroke="currentColor" stroke-width="2"/></svg>
+      Дорухона
+    </button>
+    <button class="nav-btn" data-screen="ai" onclick="switchScreen('ai')">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 2a4 4 0 0 0-4 4v6a4 4 0 0 0 8 0V6a4 4 0 0 0-4-4Z" stroke="currentColor" stroke-width="2"/></svg>
+      AI Духтур
+    </button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>

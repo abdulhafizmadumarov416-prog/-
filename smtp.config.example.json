@@ -1,0 +1,7 @@
+{
+  "host": "smtp.gmail.com",
+  "port": 465,
+  "user": "pochtai-shumo@gmail.com",
+  "pass": "kodi-16-harfai-gmail-app-password",
+  "from": "pochtai-shumo@gmail.com"
+}
