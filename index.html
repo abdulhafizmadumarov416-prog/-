@@ -164,24 +164,26 @@
 
     <!-- ============ SCREEN: LIBRARY ============ -->
     <div class="screen" id="screen-library">
-      <div class="section-title">
+      <div class="section-title" id="lib-title">
         <div class="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M4 19V5a2 2 0 0 1 2-2h12a1 1 0 0 1 1 1v14M6 21h13M6 21a2 2 0 1 1 0-4h13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <div><h2>Китобхонаи тиббӣ</h2><span>Ихтисосҳо ва зерихтисосҳо</span></div>
       </div>
       <div id="library-list"></div>
+      <div id="path-view" style="display:none;"></div>
     </div>
 
     <!-- ============ SCREEN: PHARMACY ============ -->
     <div class="screen" id="screen-pharmacy">
       <div class="section-title">
         <div class="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8.5 8.5l7 7" stroke="currentColor" stroke-width="2"/></svg></div>
-        <div><h2>Дорухона</h2><span>Ҷустуҷӯ бо номи дору ё бемори</span></div>
+        <div><h2>Дорухона</h2><span>465 дору ба ихтисосҳои духтурон ҷудо карда шудааст</span></div>
       </div>
       <div class="search-bar">
         <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="m21 21-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         <input type="text" id="pharmacy-search" placeholder="масалан: дарди сар, таб, Парацетамол..." oninput="renderPharmacy()">
         <button onclick="renderPharmacy()">Ёфтан</button>
       </div>
+      <div id="pharmacy-chips" class="chips"></div>
       <div id="pharmacy-list"></div>
     </div>
 
@@ -229,6 +231,8 @@
   </div>
 </div>
 
+<script src="learning.js"></script>
+<script src="medicines.js"></script>
 <script src="script.js"></script>
 
 </body>

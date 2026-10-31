@@ -738,21 +738,51 @@ const LIBRARY = [
   ]}
 ];
 
+const hasPaths = () => typeof LEARNING !== 'undefined';
+let pathSpec = null;     // номи ихтисосе, ки роҳи омӯзишаш кушода аст
+
+/* ---------- Пешрафти омӯзиш (дар браузер, барои ҳар корбар алоҳида) ---------- */
+function progKey(){ return 'progress:' + (me ? me.email : 'guest'); }
+function loadProgress(){ try{ return JSON.parse(store.get(progKey()) || '{}'); }catch(e){ return {}; } }
+function saveProgress(p){ store.set(progKey(), JSON.stringify(p)); }
+function pathTotal(name){
+  const L = LEARNING[name];
+  return L ? L.stages.reduce((n, s) => n + s.topics.length, 0) : 0;
+}
+function pathDone(name){
+  const L = LEARNING[name];
+  if(!L) return 0;
+  const p = loadProgress()[name] || {};
+  let n = 0;
+  L.stages.forEach((s, si) => s.topics.forEach((t, ti) => { if(p[si + '-' + ti]) n++; }));
+  return n;
+}
+function pathPercent(name){
+  const t = pathTotal(name);
+  return t ? Math.round(pathDone(name) * 100 / t) : 0;
+}
+
 function renderLibrary(){
   const el = document.getElementById('library-list');
   el.dataset.loaded = '1';
   el.innerHTML = '';
   LIBRARY.forEach((spec, i)=>{
+    const L = hasPaths() ? LEARNING[spec.name] : null;
+    const pct = L ? pathPercent(spec.name) : 0;
+    const icon = L ? '<span class="spec-ic">' + L.icon + '</span>' : '';
+    const chip = L ? '<span class="path-chip' + (pct ? ' on' : '') + '">📚 ' + (pct ? 'Пешрафт: ' + pct + '%' : 'Роҳи омӯзиш') + '</span>' : '';
+    const btn = L ? '<button class="btn btn-green path-btn" onclick="openPath(' + i + ')">📚 Роҳи омӯзиш аз 0 то 100</button>' : '';
     const div = document.createElement('div');
     div.className = 'box spec-item';
     div.id = 'spec-'+i;
     div.innerHTML = `
       <div class="head" onclick="toggleSpec(${i})">
-        <div><h3>${spec.name}</h3><span style="font-size:.78rem;color:var(--gray);">${spec.desc}</span></div>
+        <div class="head-main">${icon}<div><h3>${spec.name}</h3><span style="font-size:.78rem;color:var(--gray);">${spec.desc}</span>${chip}</div></div>
         <svg viewBox="0 0 24 24" fill="none"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
       <div class="sub-list">
         ${spec.subs.map(s=>`<div class="sub-item"><h4>${s.name}</h4><p>${s.desc}</p></div>`).join('')}
+        ${btn}
       </div>`;
     el.appendChild(div);
   });
@@ -761,49 +791,169 @@ function toggleSpec(i){
   document.getElementById('spec-'+i).classList.toggle('open');
 }
 
+/* ---------- Саҳифаи роҳи омӯзиш ---------- */
+const LV_CLASS = {'Оғоз':1, 'Миёна':2, 'Пешрафта':3};
+
+function buildPathHtml(spec, L){
+  const C = LEARNING_COMMON;
+  const prog = loadProgress()[spec.name] || {};
+  const subs = spec.subs.map(s => '<span class="sub-pill">' + esc(s.name) + '</span>').join('');
+  const books = L.books.map(b =>
+    '<div class="book-card"><span class="lv lv-' + (LV_CLASS[b.lv] || 1) + '">' + esc(b.lv) + '</span>'
+    + '<b>' + esc(b.t) + '</b><small>' + esc(b.a) + '</small><p>' + esc(b.why) + '</p></div>'
+  ).join('');
+  const stages = L.stages.map((s, si) => {
+    const meta = STAGE_META[si];
+    const topics = s.topics.map((t, ti) =>
+      '<li><label><input type="checkbox" ' + (prog[si + '-' + ti] ? 'checked ' : '') + 'onchange="toggleTopic(\'' + si + '-' + ti + '\', this.checked)"><span>' + esc(t) + '</span></label></li>'
+    ).join('');
+    return '<div class="stage" id="stage-' + si + '">'
+      + '<div class="stage-dot">' + (si + 1) + '</div>'
+      + '<div class="stage-card">'
+      + '<div class="stage-top"><span class="stage-pct">' + meta.p + '</span><span class="stage-time">⏱ ' + esc(s.time) + '</span><span class="stage-count" id="stage-count-' + si + '"></span></div>'
+      + '<h4>' + esc(meta.title) + '</h4>'
+      + '<p class="stage-goal">🎯 ' + esc(s.goal) + '</p>'
+      + '<div class="pbar sm"><i id="stage-fill-' + si + '"></i></div>'
+      + '<ul class="topics">' + topics + '</ul>'
+      + '</div></div>';
+  }).join('');
+  const common = C.books.map(b =>
+    '<li><b>' + esc(b.t) + '</b> <small>— ' + esc(b.a) + '</small><span>' + esc(b.why) + '</span></li>'
+  ).join('');
+  const links = L.links.concat(C.links).map(x => '<li>' + esc(x) + '</li>').join('');
+  const tips = C.tips.map(x => '<li>' + esc(x) + '</li>').join('');
+
+  return '<div class="back-link" onclick="closePath()">← Ба рӯйхати ихтисосҳо</div>'
+    + '<div class="path-hero"><div class="path-ic">' + L.icon + '</div><div class="path-hero-text">'
+    + '<h2>' + esc(spec.name) + ': аз 0 то 100</h2><p>' + esc(L.intro) + '</p><div class="subs">' + subs + '</div></div></div>'
+    + '<div class="path-progress"><div class="pp-top"><b id="path-pct">0%</b><span id="path-count"></span>'
+    + '<a class="reset-link" onclick="resetPath()">Аз нав оғоз кардан</a></div>'
+    + '<div class="pbar"><i id="path-fill"></i></div>'
+    + '<div class="path-done" id="path-done-msg" style="display:none">🎉 Табрик! Шумо ҳамаи қадамҳои ин роҳро анҷом додед. Барои таҷрибаи воқеӣ ба таҳсилоти расмӣ ва таҷрибаи клиникӣ гузаред.</div></div>'
+    + '<div class="note-box">⚠️ ' + esc(C.disclaimer) + '</div>'
+    + '<h3 class="path-h">📖 Китобҳои асосии ихтисос</h3><div class="books-grid">' + books + '</div>'
+    + '<h3 class="path-h">🗺️ Қадамҳои омӯзиш</h3><div class="stages">' + stages + '</div>'
+    + '<h3 class="path-h">🧱 Китобҳои умумии асосӣ (барои ҳамаи ихтисосҳо)</h3><ul class="common-books">' + common + '</ul>'
+    + '<div class="two-col"><div class="box"><h4>🌐 Манбаъҳои ройгон</h4><ul class="plain-list">' + links + '</ul></div>'
+    + '<div class="box"><h4>💡 Маслиҳатҳои омӯзиш</h4><ul class="plain-list">' + tips + '</ul></div></div>';
+}
+
+function openPath(i){
+  if(!hasPaths()) return;
+  const spec = LIBRARY[i], L = LEARNING[spec.name];
+  if(!L) return;
+  pathSpec = spec.name;
+  document.getElementById('library-list').style.display = 'none';
+  document.getElementById('lib-title').style.display = 'none';
+  const view = document.getElementById('path-view');
+  view.innerHTML = buildPathHtml(spec, L);
+  view.style.display = 'block';
+  updatePathProgress();
+  document.querySelector('.app-body').scrollTop = 0;
+}
+
+function closePath(){
+  pathSpec = null;
+  document.getElementById('path-view').style.display = 'none';
+  document.getElementById('library-list').style.display = '';
+  document.getElementById('lib-title').style.display = '';
+  renderLibrary();
+  document.querySelector('.app-body').scrollTop = 0;
+}
+
+function toggleTopic(key, checked){
+  if(!pathSpec) return;
+  const p = loadProgress();
+  p[pathSpec] = p[pathSpec] || {};
+  if(checked) p[pathSpec][key] = true; else delete p[pathSpec][key];
+  saveProgress(p);
+  updatePathProgress();
+}
+
+function resetPath(){
+  if(!pathSpec || !confirm('Пешрафти ин ихтисосро аз нав оғоз мекунед? Ҳамаи қайдҳо нест мешаванд.')) return;
+  const p = loadProgress();
+  delete p[pathSpec];
+  saveProgress(p);
+  const i = LIBRARY.findIndex(s => s.name === pathSpec);
+  openPath(i);
+}
+
+function updatePathProgress(){
+  if(!pathSpec) return;
+  const L = LEARNING[pathSpec];
+  const prog = loadProgress()[pathSpec] || {};
+  let total = 0, done = 0;
+  L.stages.forEach((s, si) => {
+    let sd = 0;
+    s.topics.forEach((t, ti) => { total++; if(prog[si + '-' + ti]){ done++; sd++; } });
+    const fill = document.getElementById('stage-fill-' + si);
+    if(fill) fill.style.width = (sd * 100 / s.topics.length) + '%';
+    const card = document.getElementById('stage-' + si);
+    if(card) card.classList.toggle('complete', sd === s.topics.length);
+    const cnt = document.getElementById('stage-count-' + si);
+    if(cnt) cnt.textContent = sd + '/' + s.topics.length;
+  });
+  const pct = total ? Math.round(done * 100 / total) : 0;
+  document.getElementById('path-pct').textContent = pct + '%';
+  document.getElementById('path-count').textContent = done + ' аз ' + total + ' мавзӯъ омӯхта шуд';
+  document.getElementById('path-fill').style.width = pct + '%';
+  document.getElementById('path-done-msg').style.display = pct === 100 ? 'block' : 'none';
+}
+
 /* ==================================================================
    PHARMACY (searchable medicine database)
 ================================================================== */
-const MEDICINES = [
-  {name:'Парацетамол', comp:'Парацетамол 500 мг', ind:'Пастсозандаи таб ва дарди сабуки то миёна (дарди сар, дандон, мушак).', take:'Ҳарорати баланд (аз 38°C) ё дарди сабук. Калонсолон: 500-1000 мг, на бештар аз 4 бор дар шабонарӯз, бо фосилаи на камтар аз 4 соат.', notTake:'Дар бемории вазнини ҷигар, аллергия ба модда, якҷоя бо машрубот.', tags:['таб','дарди сар','дарди дандон','хунукӣ','зуком']},
-  {name:'Ибупрофен', comp:'Ибупрофен 400 мг', ind:'Зиддидард, зиддиилтиҳобӣ ва пасткунандаи таб.', take:'Дарди буғум, мушак, сар ё ҳайз бо ҳарорати баланд.', notTake:'Захми меъда, бемории гурда, ҳомиладории семоҳаи сеюм, кӯдакони то 6 моҳ.', tags:['дарди буғум','дарди ҳайз','дарди мушак','таб','илтиҳоб']},
-  {name:'Но-шпа (Дротаверин)', comp:'Дротаверин гидрохлорид 40 мг', ind:'Спазмолитик барои дарди спазматикии меъда, рӯда ва роҳи сафро.', take:'Дарди печиши шикам ё спазми меъда/рӯда.', notTake:'Норасоии шадиди ҷигар, гурда ё дил.', tags:['дарди шикам','спазм','дарди меъда']},
-  {name:'Лоратадин', comp:'Лоратадин 10 мг', ind:'Зиддиаллергия — барои терсак, хориш, зукоми аллергӣ.', take:'Ҳангоми аломатҳои аллергия (хориш, чашми обдор, терсак).', notTake:'Синни то 2 сол, ҳассосияти шахсӣ ба модда.', tags:['аллергия','хориш','терсак']},
-  {name:'Омепразол', comp:'Омепразол 20 мг', ind:'Паст кардани кислотаи меъда — сӯзиши дил, гастрит.', take:'Сӯзиши дил, гастрит, рефлюкси меъда.', notTake:'Давраи ширдиҳӣ бе машварати духтур.', tags:['сӯзиши дил','гастрит','дарди меъда']},
-  {name:'Ангишти фаъол', comp:'Карбон фаъолшуда', ind:'Заҳролудшавии ғизоӣ, варамкунии шикам.', take:'Заҳролудшавӣ ё варами шикам.', notTake:'Хунравии меъда-рӯда, захми шадид.', tags:['заҳролудшавӣ','дарунравӣ','варами шикам']},
-  {name:'Амоксициллин*', comp:'Амоксициллин 500 мг (антибиотик)', ind:'Сироятҳои бактериявии роҳи нафас, гулӯ, пешоб.', take:'Танҳо бо тавсия ва дастури духтур пас аз ташхис.', notTake:'Аллергия ба пенициллинҳо; бидуни дастури духтур истифода нашавад.', tags:['ангина','сироят','гулӯдард']},
-  {name:'Мезим (ферментҳо)', comp:'Панкреатин', ind:'Беҳтар кардани ҳозима пас аз хӯроки вазнин.', take:'Ҳангоми вазнинии меъда ё сустии ҳозима.', notTake:'Илтиҳоби шадиди зери меъда (панкреатит).', tags:['вазнинии меъда','ҳозимаи бад']},
-  {name:'Валидол', comp:'Ментоли валин эфир', ind:'Сабуккунандаи дарди сабуки дил ва изтироб.', take:'Дарди сабуки сина ё изтироб.', notTake:'Ивазкунандаи табобати аслии дил нест — дар дарди шадид фавран ба ёрии таъҷилӣ занг занед.', tags:['дарди дил','изтироб','дилбеҳузурӣ']},
-  {name:'Каптоприл*', comp:'Каптоприл 25 мг', ind:'Пастсозандаи фишори баланди хун (гипертония).', take:'Танҳо бо дастури духтур.', notTake:'Ҳомиладорӣ, аллергия, бе назорати духтур.', tags:['фишори хун','гипертония']},
-  {name:'Мукалтин', comp:'Экстракти растании алтей', ind:'Сабук кардани сулфаи хушк ва тар.', take:'Сулфа ва гулӯдард.', notTake:'Аллергия ба компонентҳои растанӣ.', tags:['сулфа','гулӯдард']},
-  {name:'Супрастин', comp:'Хлоропирамин 25 мг', ind:'Зиддиаллергия барои аломатҳои шадид (терсак, хориш).', take:'Аломатҳои шадиди аллергӣ.', notTake:'Синни томактабӣ бе дастури духтур, ҳомиладорӣ.', tags:['аллергия','терсак','хориш']}
-];
+let pharmSpec = -1;      // -1 = ҳамаи ихтисосҳо
+let pharmLimit = 40;     // чанд корт якбора нишон дода мешавад
+let pharmLastQ = '';
+
+function pharmSelect(i){ pharmSpec = i; pharmLimit = 40; renderPharmacy(); }
+function pharmMore(){ pharmLimit += 40; renderPharmacy(); }
 
 function renderPharmacy(){
   const el = document.getElementById('pharmacy-list');
+  const chipsEl = document.getElementById('pharmacy-chips');
   el.dataset.loaded = '1';
   const q = (document.getElementById('pharmacy-search').value || '').trim().toLowerCase();
-  let results = MEDICINES;
-  if(q){
-    results = MEDICINES.filter(m =>
-      m.name.toLowerCase().includes(q) ||
-      m.ind.toLowerCase().includes(q) ||
-      m.tags.some(t => t.toLowerCase().includes(q))
-    );
-  }
-  if(results.length===0){
-    el.innerHTML = '<div class="empty-state">Ҳеҷ дору ёфт нашуд. Калимаи дигар кӯшиш кунед (масалан номи беморӣ).</div>';
+  if(q !== pharmLastQ){ pharmLastQ = q; pharmLimit = 40; }
+
+  const match = m => !q || (m.n + ' ' + m.c + ' ' + m.i).toLowerCase().includes(q);
+  const all = MED_SPECS.map((s,i) => ({s, i, list: s.meds.filter(match)})).filter(g => g.list.length);
+  const totalMatch = all.reduce((n,g) => n + g.list.length, 0);
+
+  // Тугмаҳои ихтисосҳо
+  if(pharmSpec >= 0 && !all.some(g => g.i === pharmSpec)) pharmSpec = -1;
+  chipsEl.innerHTML =
+    `<button class="chip ${pharmSpec<0?'active':''}" onclick="pharmSelect(-1)">Ҳама <span>${totalMatch}</span></button>` +
+    all.map(g => `<button class="chip ${pharmSpec===g.i?'active':''}" onclick="pharmSelect(${g.i})">${esc(g.s.name)} <span>${g.list.length}</span></button>`).join('');
+
+  const groups = all.filter(g => pharmSpec < 0 || g.i === pharmSpec);
+  if(groups.length === 0){
+    el.innerHTML = '<div class="empty-state">Ҳеҷ дору ёфт нашуд. Калимаи дигар кӯшиш кунед (масалан номи беморӣ ё модда).</div>';
     return;
   }
-  el.innerHTML = results.map(m => `
-    <div class="med-card">
-      <h3>${m.name}</h3>
-      <div class="med-row"><div class="lbl">Таркиб</div><div class="val">${m.comp}</div></div>
-      <div class="med-row"><div class="lbl">Барои чист</div><div class="val">${m.ind}</div></div>
-      <div class="med-row"><div class="lbl">Кай истифода баред</div><div class="val">${m.take}</div></div>
-      <div class="med-row warn"><div class="lbl">Кай истифода набаред</div><div class="val">${m.notTake}</div></div>
-    </div>
-  `).join('') + '<p style="font-size:.72rem;color:var(--gray);text-align:center;">* Доруҳои бо аломати star танҳо бо нусхаи духтур. Ин маълумот ивазкунандаи машварати духтур нест.</p>';
+
+  let shown = 0, html = '', more = 0;
+  for(const g of groups){
+    if(shown >= pharmLimit){ more += g.list.length; continue; }
+    html += `<h3 class="med-group">${esc(g.s.name)} <small>${esc(g.s.desc)} · ${g.list.length}</small></h3>`;
+    for(const m of g.list){
+      if(shown >= pharmLimit){ more++; continue; }
+      shown++;
+      html += `
+      <div class="med-card">
+        <h3>${esc(m.n)}${m.r ? ' <span class="rx" title="Танҳо бо нусхаи духтур">Rx</span>' : ''}</h3>
+        <div class="med-row"><div class="lbl">Таркиб</div><div class="val">${esc(m.c)}</div></div>
+        <div class="med-row"><div class="lbl">Барои чист</div><div class="val">${esc(m.i)}</div></div>
+        <div class="med-row"><div class="lbl">Кай истифода баред</div><div class="val">${esc(m.t)}</div></div>
+        <div class="med-row warn"><div class="lbl">Кай истифода набаред</div><div class="val">${esc(m.x)}</div></div>
+      </div>`;
+    }
+  }
+  if(more > 0) html += `<div class="more-wrap"><button class="btn btn-outline" onclick="pharmMore()">Бештар нишон диҳед (боқӣ: ${more})</button></div>`;
+  html += '<p style="font-size:.72rem;color:var(--gray);text-align:center;">Rx — доруҳои танҳо бо нусхаи духтур. Ин маълумоти умумӣ аст ва ивазкунандаи машварати духтур нест; миқдор ва мӯҳлати қабулро духтур муайян мекунад.</p>';
+  el.innerHTML = html;
 }
 
 /* ==================================================================
